@@ -79,38 +79,12 @@ noncomputable definition zero : polynomial_derivation R :=
   map_C_mul' := λ k f, by simp,
   map_mul' := λ f g, by simp }
 
-lemma add_map_add'
-  (d e : polynomial_derivation R)
-  (f g : polynomial R) :
-  d (f + g) + e (f + g) = d f + e f + (d g + e g) :=
-begin
-  rw [d.map_add, e.map_add], ring,
-end
-
-lemma add_map_C_mul'
-  (d e : polynomial_derivation R)
-  (k : R)
-  (f : polynomial R) :
-  d (C k * f) + e (C k * f) = C k * (d f + e f) :=
-begin
-  rw [d.map_C_mul, e.map_C_mul], ring
-end
-
-lemma add_map_mul'
-  (d e : polynomial_derivation R)
-  (f g : polynomial R) :
-  d (f * g) + e (f * g) = f * (d g + e g) + g * (d f + e f) :=
-begin
-  rw d.map_mul, rw e.map_mul, ring,
-end
-
 noncomputable def add (d : polynomial_derivation R) (e : polynomial_derivation R) : polynomial_derivation R := 
 { to_fun := λ x, d x + e x,
-  map_add' := λ f g, add_map_add' d e f g,
-  map_C_mul' := λ k f, add_map_C_mul' d e k f,
-  map_mul' := λ f g, add_map_mul' d e f g
+  map_add' := λ f g, by rw [d.map_add, e.map_add]; ring,
+  map_C_mul' := λ k f, by rw [d.map_C_mul, e.map_C_mul]; ring,
+  map_mul' := λ f g, by rw [d.map_mul, e.map_mul]; ring
 }
-
 
 noncomputable def neg (d : polynomial_derivation R) : polynomial_derivation R :=
 { to_fun := λ x, - (d x),
@@ -125,11 +99,11 @@ noncomputable instance : has_add (polynomial_derivation R) := ⟨add⟩
 
 noncomputable instance : has_neg (polynomial_derivation R) := ⟨neg⟩
 
-lemma zero' (p : polynomial R) : (0 : polynomial_derivation R) p = 0 := sorry
+lemma zero' (p : polynomial R) : (0 : polynomial_derivation R) p = 0 := rfl
 
-lemma add' (d e : polynomial_derivation R) (p : polynomial R) : (d + e) p = d p + e p := sorry
+lemma add' (d e : polynomial_derivation R) (p : polynomial R) : (d + e) p = d p + e p := rfl
 
-lemma neg' (d : polynomial_derivation R) (p : polynomial R) : (- d) p = -(d p) := sorry
+lemma neg' (d : polynomial_derivation R) (p : polynomial R) : (- d) p = -(d p) := rfl
 
 theorem add_assoc (d e f : polynomial_derivation R) : d + e + f = d + (e + f) :=
 begin
@@ -156,8 +130,15 @@ begin
   ext p, rw add', rw add', rw add_comm,
 end
 
-noncomputable instance : add_comm_group (polynomial_derivation R) := 
-  ⟨_, add_assoc, _, zero_add, add_zero, _, add_left_neg, add_comm⟩
+noncomputable instance : add_comm_group (polynomial_derivation R) :=
+{ add := (+),
+  add_assoc := add_assoc,
+  zero := 0,
+  zero_add := zero_add,
+  add_zero := add_zero,
+  neg := has_neg.neg,
+  add_left_neg := add_left_neg,
+  add_comm := add_comm }
 
 @[simp]
 lemma map_one (d : polynomial_derivation R) : d 1 = 0 :=
@@ -222,7 +203,7 @@ lemma structure_classification_aux2
 
 
 noncomputable definition structure_classification (R : Type) [comm_ring R] :
-  polynomial_derivation R ≃ polynomial R :=
+  polynomial_derivation R ≃+ polynomial R :=
 { to_fun := λ d, d X,
   inv_fun := λ j, 
     { to_fun := λ f, j * f.derivative,
@@ -247,6 +228,10 @@ noncomputable definition structure_classification (R : Type) [comm_ring R] :
     intro p,
     change p * derivative X = p,
     simp only [mul_one, polynomial.derivative_X],
+  end,
+  map_add' := begin
+    intros x y,
+    rw add',
   end }
 
 end polynomial_derivation
