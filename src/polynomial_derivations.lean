@@ -70,6 +70,94 @@ theorem map_mul (d : polynomial_derivation R): ∀ (f g : polynomial R), d (f * 
 @[simp]
 theorem map_C_mul (d : polynomial_derivation R): ∀ (k : R) (f : polynomial R), d (C k * f) = C k * d f := d.map_C_mul'
 
+@[ext] theorem ext : ∀ {d₁ d₂ : polynomial_derivation R} (H : ∀ f, d₁ f = d₂ f), d₁ = d₂
+| ⟨_, _, _, _⟩ ⟨_, _, _, _⟩ H := by congr; exact funext H
+
+noncomputable definition zero : polynomial_derivation R := 
+{ to_fun := λ _, 0,
+  map_add' := λ f g, by simp,
+  map_C_mul' := λ k f, by simp,
+  map_mul' := λ f g, by simp }
+
+lemma add_map_add'
+  (d e : polynomial_derivation R)
+  (f g : polynomial R) :
+  d (f + g) + e (f + g) = d f + e f + (d g + e g) :=
+begin
+  rw [d.map_add, e.map_add], ring,
+end
+
+lemma add_map_C_mul'
+  (d e : polynomial_derivation R)
+  (k : R)
+  (f : polynomial R) :
+  d (C k * f) + e (C k * f) = C k * (d f + e f) :=
+begin
+  rw [d.map_C_mul, e.map_C_mul], ring
+end
+
+lemma add_map_mul'
+  (d e : polynomial_derivation R)
+  (f g : polynomial R) :
+  d (f * g) + e (f * g) = f * (d g + e g) + g * (d f + e f) :=
+begin
+  rw d.map_mul, rw e.map_mul, ring,
+end
+
+noncomputable def add (d : polynomial_derivation R) (e : polynomial_derivation R) : polynomial_derivation R := 
+{ to_fun := λ x, d x + e x,
+  map_add' := λ f g, add_map_add' d e f g,
+  map_C_mul' := λ k f, add_map_C_mul' d e k f,
+  map_mul' := λ f g, add_map_mul' d e f g
+}
+
+
+noncomputable def neg (d : polynomial_derivation R) : polynomial_derivation R :=
+{ to_fun := λ x, - (d x),
+  map_add' := λ f g, by rw [d.map_add, neg_add],
+  map_C_mul' := λ k f, by rw [d.map_C_mul, mul_neg_eq_neg_mul_symm],
+  map_mul' := λ f g, by rw [d.map_mul, neg_add, mul_neg_eq_neg_mul_symm, mul_neg_eq_neg_mul_symm] 
+}
+
+noncomputable instance : has_zero (polynomial_derivation R) := ⟨zero⟩
+
+noncomputable instance : has_add (polynomial_derivation R) := ⟨add⟩
+
+noncomputable instance : has_neg (polynomial_derivation R) := ⟨neg⟩
+
+lemma zero' (p : polynomial R) : (0 : polynomial_derivation R) p = 0 := sorry
+
+lemma add' (d e : polynomial_derivation R) (p : polynomial R) : (d + e) p = d p + e p := sorry
+
+lemma neg' (d : polynomial_derivation R) (p : polynomial R) : (- d) p = -(d p) := sorry
+
+theorem add_assoc (d e f : polynomial_derivation R) : d + e + f = d + (e + f) :=
+begin
+  ext p, repeat {rw add'}, rw add_assoc,
+end
+
+theorem zero_add (d : polynomial_derivation R) : 0 + d = d := 
+begin
+  ext p, rw add', rw zero', rw zero_add,
+end
+
+theorem add_zero (d : polynomial_derivation R) : d + 0 = d :=
+begin
+  ext p, rw add', rw zero', rw add_zero,
+end
+
+theorem add_left_neg (d : polynomial_derivation R) : -d + d = 0 :=
+begin
+  ext p, rw add', rw neg', rw add_left_neg, refl,
+end
+
+theorem add_comm (d e : polynomial_derivation R) : d + e = e + d :=
+begin
+  ext p, rw add', rw add', rw add_comm,
+end
+
+noncomputable instance : add_comm_group (polynomial_derivation R) := 
+  ⟨_, add_assoc, _, zero_add, add_zero, _, add_left_neg, add_comm⟩
 
 @[simp]
 lemma map_one (d : polynomial_derivation R) : d 1 = 0 :=
@@ -120,9 +208,6 @@ begin
   rw [pow_succ, mul_comm X, ←mul_assoc, map_mul, derivative_mul, h, derivative_X], 
   exact structure_theorem_aux' a n d,
 end
-
-@[ext] theorem ext : ∀ {d₁ d₂ : polynomial_derivation R} (H : ∀ f, d₁ f = d₂ f), d₁ = d₂
-| ⟨_, _, _, _⟩ ⟨_, _, _, _⟩ H := by congr; exact funext H
 
 lemma structure_classification_aux1
   (j : polynomial R)
