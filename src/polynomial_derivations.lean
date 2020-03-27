@@ -140,6 +140,53 @@ noncomputable instance : add_comm_group (polynomial_derivation R) :=
   add_left_neg := add_left_neg,
   add_comm := add_comm }
 
+noncomputable def smul (r : R) (d : polynomial_derivation R) : polynomial_derivation R := 
+{ to_fun := λ g, C r * d g,
+  map_add' := λ f g, by rw [d.map_add, mul_add],
+  map_C_mul' := λ f g, by rw d.map_C_mul; ring,
+  map_mul' := λ g b, by rw d.map_mul; ring }
+
+noncomputable instance : has_scalar R (polynomial_derivation R) :=
+{ smul := smul }
+
+lemma smul' (r : R) (d : polynomial_derivation R) (g : polynomial R) : (r • d) g = C r * d g := rfl
+
+example {R : Type}
+  [comm_ring R] :
+  ∀ (r s : R) (x : polynomial_derivation R),
+    (r + s) • x = r • x + s • x :=
+begin
+  intros r s x,
+  ext f, rw [smul', add', smul', smul', ←add_mul, ←C_add],
+end
+
+noncomputable instance : module R (polynomial_derivation R) :=
+{ smul := smul,
+  one_smul := begin
+      intro b,
+      ext f, rw smul' _ b, simp only [one_mul, polynomial.C_1],
+    end,
+  mul_smul := begin
+      intros x y b,
+      ext p, rw [smul', smul', smul', ←mul_assoc, C_mul],
+    end,
+  smul_add := begin
+      intros r x y,
+      ext f, rw [smul', add', add', smul', smul', mul_add],
+    end,
+  smul_zero := begin
+      intro r,
+      ext f, rw smul', rw zero', simp only [polynomial.coeff_zero, mul_zero],
+    end,
+  add_smul := begin
+      intros r s x,
+      ext f, rw [smul', add', smul', smul', ←add_mul, ←C_add],
+    end,
+  zero_smul := begin
+    intro x,
+    ext f, rw [smul', zero'], simp,
+  end }
+
 @[simp]
 lemma map_one (d : polynomial_derivation R) : d 1 = 0 :=
 begin
@@ -200,6 +247,7 @@ lemma structure_classification_aux2
   (j f g : polynomial R) :
   j * (derivative f * g + f * derivative g) =
     f * (j * derivative g) + g * (j * derivative f) := by ring
+
 
 
 noncomputable definition structure_classification (R : Type) [comm_ring R] :
