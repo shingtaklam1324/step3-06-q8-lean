@@ -229,9 +229,6 @@ noncomputable definition structure_classification (R : Type) [comm_ring R] :
     change p * derivative X = p,
     simp only [mul_one, polynomial.derivative_X],
   end,
-  map_add' := begin
-    intros x y,
-    rw add',
-  end }
+  map_add' := λ x y, by rw add' }
 
 end polynomial_derivation
