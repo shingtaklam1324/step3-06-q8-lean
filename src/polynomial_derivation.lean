@@ -279,4 +279,37 @@ noncomputable definition structure_classification (R : Type) [comm_ring R] :
   end,
   map_add' := λ x y, by rw add' }
 
+noncomputable definition linear_equiv_polynomial :
+linear_equiv R (polynomial_derivation R) (polynomial R) :=
+{ to_fun := λ d, d X,
+  add := λ _ _, by rw add',
+  smul := begin
+    intros c x,
+    ext k,
+    rw smul', simp,
+  end,
+  inv_fun := λ j, { to_fun := λ f, j * f.derivative,
+      map_add' := λ _ _, by rw [derivative_add, mul_add],
+      map_C_mul' := begin
+        intros,
+        rw [derivative_mul, derivative_C],
+        exact structure_classification_aux1 j k f,
+      end,
+      map_mul' := begin
+        intros,
+        rw derivative_mul,
+        exact structure_classification_aux2 j f g,
+      end },
+  left_inv := begin
+    intro d,
+    ext1 f,
+    rw structure_theorem d f,
+    refl,
+  end,
+  right_inv := begin
+    intro p,
+    change p * derivative X = p,
+    simp only [mul_one, polynomial.derivative_X],
+  end, }
+
 end polynomial_derivation
