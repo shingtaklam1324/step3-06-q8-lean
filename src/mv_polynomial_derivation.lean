@@ -45,6 +45,4 @@ lemma map_C (d : mv_polynomial_derivation R S) (a : R) : d (C a) = 0 :=
 by rw [(show C a = C a * (1 : mv_polynomial S R), from (mul_one _).symm),
       map_C_mul, map_one, mul_zero]
 
-theorem structure_theorem :
-
 end mv_polynomial_derivation
